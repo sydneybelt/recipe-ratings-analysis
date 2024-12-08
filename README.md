@@ -1,6 +1,11 @@
+## Reasoning Recipe Ratings
+A deep dive into the math and human psychology behind food reviews 
+
+
 ## Introduction 
 
-The basis for this analysis is a series of recipes taken from food.com and their associated user ratings. It is centered around the question of what types of recipes tend to have higher average ratings. This creates an interesting investigation into what food.com users tend to value most in a recipe, whether it’s health, taste, difficulty level, and whether the rating correlates more with the user-dependent process or the recipe-dependent ingredients. This dataset includes 83781 rows of unique recipes and 25 total columns. The predicted column is the average user rating of the recipe on a scale of 5. The columns used for fitting the models include those relevant to preparation procedure (the amount of time it takes to make a recipe and the number of steps it takes), the text of the review itself, the tags the recipe is associated with, and the nutritional information about the recipe (included caloric, fat, sugar, protein, and carbohydrate content). 
+The basis for this analysis is a series of recipes taken from food.com and their associated user ratings. It is centered around the question of what types of recipes tend to have higher average ratings. This creates an interesting investigation into what food.com users tend to value most in a recipe, whether it’s health, taste, difficulty level, and whether the rating correlates more with the user-dependent process or the recipe-dependent ingredients. This dataset includes 83781 rows of unique recipes and 25 total columns. The predicted column is the average user rating of the recipe on a scale of 5. The columns used for fitting the models include those relevant to preparation procedure (the amount of time it takes to make a recipe and the number of steps it takes), the text of the review itself, the tags the recipe is associated with, and the nutritional information about the recipe (included caloric, fat, sugar, protein, and carbohydrate content).
+
 
 ## Data Cleaning and Exploratory Data Analysis
 
@@ -185,7 +190,7 @@ Data preparation was critical in this scenario due to the potential for incomple
 
 Univariate Analysis 
 
-The distribution of average ratings across recipes is included in the box plot below to demonstrate the range of ratings that we are trying to predict in this analysis. Given a five-star scale, there is limited variation among average ratings which makes a carefully crafted prediction model necessary for quality results. The average ratings metric indicates a regression problem due to the continuous numerical data, but a categorical approach could be applied to separate the ratings into discrete buckets from ‘excellent’ to ‘poor’. 
+The distribution of average ratings across recipes is included in the box plot below to demonstrate the range of ratings that we are trying to predict in this analysis. Given a five-star scale, there is limited variation among average ratings which makes a carefully crafted prediction model necessary for quality results. The ratings tend to be high, likely due to the response bias of a user who decides to leave a review on the website and the recipes that food.com is likely to promote. The average ratings metric indicates a regression problem due to the continuous numerical data, but a categorical approach could be applied to separate the ratings into discrete buckets from ‘excellent’ to ‘poor’. 
 
 <iframe
   src="assets/rating_dist.html"
@@ -207,7 +212,8 @@ A correlation between the number of steps in a recipe and its average rating is 
 
 Interesting Aggregates 
 
-This
+This table compares recipes based on nutrition information, based on whether the caloric, protein, fat, and sugar content is considered high. This metric is based on the FDA classification as a high percent daily value threshold for a food item being 20. While one may assume that these critical nutritional values would be indicative of recipe quality, either by way of taste or health, there does not appear to be a strong correlation as each average rating is close to 4.6. 
+
 <table border="1" class="dataframe">
   <thead>
     <tr>
@@ -273,9 +279,23 @@ This
 
 Imputation 
 
+The only missing value imputation was for ratings of zero, as discussed in the introduction to this dataset. These values had to be replaced with np.nan to indicate the lack of a rating as zero stars is not possible. Including the values of zero would misrepresent the quality of the associated recipes. Additional imputation was performed to remove rows with missing values in columns used at various stages in prediction to allow for appropriate numerical regression and prevent errors in converting long text to strings. 
+
 
 ## Framing a Prediction Problem
 
+The core prediction problem is to determine ratings of recipes based on information about the recipe nutritional content, process, and review. This is a regression problem as the rating is a continuous numerical value on a scale from one to five. This response variable is chosen to better understand the key factors that go into a user’s perception of recipe quality. The evaluation metric is the mean squared error as this gives an indication of how far off the predicted values are from the actual ratings, while accounting for the unavoidable error that results from a precise average value. It is unlikely that the model will predict correctly up to multiple decimal points, so a more discrete metric like accuracy wouldn’t make sense in this case. The information used at the time of prediction relies more on the recipe (nutritional content and instructions to make the dish) itself rather than on elements of the review, as this model should be applicable to a newly posted recipe on food.com. The predictor could give someone an initial indication of whether they may like this recipe, depending on the features that are important to them. 
+
+
 ## Baseline Model
 
+The baseline model looks at limited numerical features to determine if a direct correlation exists with the average rating. The features used are the amount of steps and time it takes to make a recipe, which both relate to the process and are readily available based on objective recipe information allowing them to be suitable for a predictive model. No encoding was necessary as these variables were already numerical within a confined possible range. 
+
+This model performs a linear regression on the input features to predict the average rating, yielding a mean squared error of 0.398. This is a relatively low error given a star rating prediction with a difference of less than one from the actual value, which in this context indicates success as there can’t be partial stars. This error on unseen data is slightly lower than that on seen training data, indicating that the mode didn’t overfit and generalizes well. This linear regression was also applied to other feature columns to see if the correlation could be improved. The only correlation coefficients that weren’t zero in this analysis were those corresponding to high calorie, high protein, and high fat metrics, which themselves were still low and shown to have limited impact in the nutrition aggregate analysis. 
+
+
 ## Final Model
+
+The final model incorporates more complex techniques in preprocessing, feature engineering, and architecture to attempt to improve the prediction ability. Given the correlation coefficients resulting from the linear regression analysis, high vs. low nutritional content was included. Preprocessing these metrics to be binary allowed for grouping based on how much a potential user of the recipe would perceive factors in a rating. The length of the review was included to determine whether longer reviews might indicate stronger feelings on either end of the rating spectrum. This principle could be extended to the number of ingredients, certain key words present in the review or instructions (perhaps indicating positivity or the use of an oven that would indicate a hot dish). The number of tags was also added to determine whether the presence of the recipe in multiple groups would indicate an appeal to a wider audience, gaining more interest and potentially higher reviews. 
+
+The full model pipeline includes these additional metrics and scales input numerical data to distribute variable weights and improve the model’s ability to generalize to data. It also introduces a two-degree polynomial to account for non-linear relationships, which are likely present in the data given low correlation coefficients with a linear regression. Finally, ridge regression is used to improve the model’s ability to generalize and prevent overfitting as compared to linear regression. A grid search is used to determine the optimal alpha value in this technique. Ultimately, this more complex model yielded a slightly improved mean squared error of 0.397 on the same training and testing data. This could be further extended to determine whether other metrics might provide a better performance comparison, but this data was ultimately found to have difficulty finding correlations given the tight range of potential ratings and the difference in feature impact for reviewers. 
