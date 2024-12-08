@@ -12,9 +12,23 @@ Univariate Analysis
 
 The distribution of average ratings across recipes is included in the box plot below to demonstrate the range of ratings that we are trying to predict in this analysis. Given a five-star scale, there is limited variation among average ratings which makes a carefully crafted prediction model necessary for quality results. The average ratings metric indicates a regression problem due to the continuous numerical data, but a categorical approach could be applied to separate the ratings into discrete buckets from ‘excellent’ to ‘poor’. 
 
+<iframe
+  src="assets/rating_dist.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+
 Bivariate Analysis 
 
 A correlation between the number of steps in a recipe and its average rating is included below as this metric could indicate factors like the amount of time the recipe takes, the difficulty in making it, and the amount of detail included in the description of the steps, all of which could impact the resulting rating. This plot shows that while any number of steps could yield a high recipe rating, those with significantly more steps are generally rated higher, likely due to detailed instructions, complicated and flavorful dishes, and the quality of cooks willing to take on the challenge. 
+
+<iframe
+  src="assets/steps_plot.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
 
 Interesting Aggregates 
 
